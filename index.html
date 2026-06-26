@@ -79,13 +79,8 @@
   .hero__inner{position:relative;max-width:980px;margin:0 auto;z-index:2}
 
   /* logo */
-  .brand{display:flex;align-items:center;gap:14px;margin-bottom:64px}
-  .brand__mark{flex:0 0 auto}
-  .brand__type{display:flex;flex-direction:column;line-height:1}
-  .brand__word{font-family:var(--display);font-size:27px;letter-spacing:.5px}
-  .brand__word b{font-weight:800;color:var(--white)}
-  .brand__word span{font-weight:300;color:#dfe9ea}
-  .brand__sub{font-family:var(--display);font-weight:300;font-size:11.5px;letter-spacing:5.5px;color:var(--mint);margin-top:6px;text-transform:uppercase}
+  .brand{display:flex;align-items:center;margin-bottom:64px}
+  .brand__logo{height:54px;width:auto;display:block}
 
   .eyebrow{
     display:inline-flex;align-items:center;gap:9px;
@@ -271,17 +266,9 @@
     <div class="hero__scrim"></div>
     <div class="hero__inner">
 
-      <!-- LOGO (стилізоване відтворення; у фінал вставимо офіційний SVG/PNG) -->
+      <!-- LOGO (офіційний PNG) -->
       <div class="brand reveal" style="animation-delay:.05s">
-        <svg class="brand__mark" width="50" height="50" viewBox="0 0 50 50" fill="none">
-          <rect x="1" y="1" width="48" height="48" rx="11" stroke="#84C4C8" stroke-width="1.5" opacity=".5"/>
-          <path d="M14 12 h6 v20 h10 v6 H14 Z" fill="#FFFFFF"/>
-          <path d="M27 12 h12 v5 h-7 v4 h6 v5 h-6 v6 h-5 Z" fill="#84C4C8"/>
-        </svg>
-        <div class="brand__type">
-          <div class="brand__word"><b>DIF</b><span>FREIGHT</span></div>
-          <div class="brand__sub">International Logistics</div>
-        </div>
+        <img class="brand__logo" src="assets/diffreight-logo.png" alt="DIFFREIGHT International Logistics">
       </div>
 
       <span class="eyebrow reveal" style="animation-delay:.15s"><span class="dot"></span>Заявка на пошук постачальника</span>
