@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<!--
+  DifFreight — ЗРАЗОК форми заявки клієнта (mockup для узгодження дизайну).
+  Статичний HTML/CSS/JS, без бекенду. Призначення:
+    • показати клієнту вигляд форми у фірмовому стилі;
+    • основа для перенесення в Apps Script Web App (HtmlService) — поля вже мапнуті на «1. Замовлення».
+
+  Мапінг полів форми → колонки листа «1. Замовлення»:
+    Компанія / ПІБ        → B  (Клієнт)
+    Email, Телефон        → (нові контактні колонки, додати)
+    Назва товару          → E  (Товар: назва / опис)
+    Опис / характеристики → E  (доповнює опис)
+    Бажана кількість      → F
+    Посилання на аналог   → G
+    Цільова ціна + валюта → H
+    Бажані терміни        → I
+    Додаткові вимоги      → J
+    Фото-референс         → K  (завантаження у папку Drive клієнта)
+    Order ID, Дата, Виконавець → генерує система / заповнює байєр
+-->
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DifFreight — Заявка на пошук постачальника</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;600;700;800;900&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --indigo:#3A3875;
+    --indigo-deep:#2c2a5c;
+    --mint:#84C4C8;
+    --mint-soft:#aedadd;
+    --navy:#0E1B28;
+    --navy-2:#13263a;
+    --white:#FFFFFF;
+    --ink:#1a2230;
+    --muted:#5d6b7d;
+    --line:#e3e7ee;
+    --field-bg:#f6f8fb;
+    --shadow:0 18px 50px -24px rgba(14,27,40,.45);
+    --radius:14px;
+    --display:'Archivo',sans-serif;
+    --body:'Manrope',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:var(--body);
+    color:var(--ink);
+    background:#eef1f6;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* ============ HERO ============ */
+  .hero{
+    position:relative;
+    color:var(--white);
+    overflow:hidden;
+    padding:54px 24px 120px;
+    background:var(--navy);
+  }
+  /* банер DifFreight на задньому фоні */
+  .hero__bg{
+    position:absolute; inset:0;
+    /* банер DifFreight без логотипа */
+    background:url('assets/diffreight-hero-without-logo-regenerated.png') center 42%/cover no-repeat;
+    z-index:0;
+  }
+  /* затемнення поверх банера, щоб текст читався (ліворуч темніше, праворуч видно картинку) */
+  .hero__scrim{
+    position:absolute; inset:0; z-index:1; pointer-events:none;
+    background:
+      linear-gradient(105deg, rgba(14,27,40,.93) 0%, rgba(14,27,40,.78) 34%, rgba(14,27,40,.40) 72%, rgba(14,27,40,.26) 100%),
+      linear-gradient(180deg, rgba(14,27,40,.45) 0%, rgba(14,27,40,0) 32%, rgba(14,27,40,.40) 76%, rgba(14,27,40,.94) 100%);
+  }
+  .hero__inner{position:relative;max-width:980px;margin:0 auto;z-index:2}
+
+  /* logo */
+  .brand{display:flex;align-items:center;gap:14px;margin-bottom:64px}
+  .brand__mark{flex:0 0 auto}
+  .brand__type{display:flex;flex-direction:column;line-height:1}
+  .brand__word{font-family:var(--display);font-size:27px;letter-spacing:.5px}
+  .brand__word b{font-weight:800;color:var(--white)}
+  .brand__word span{font-weight:300;color:#dfe9ea}
+  .brand__sub{font-family:var(--display);font-weight:300;font-size:11.5px;letter-spacing:5.5px;color:var(--mint);margin-top:6px;text-transform:uppercase}
+
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:9px;
+    font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:3px;text-transform:uppercase;
+    color:var(--mint);
+    padding:7px 16px;border:1px solid rgba(132,196,200,.35);border-radius:100px;
+    background:rgba(132,196,200,.06);
+  }
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--mint);box-shadow:0 0 12px var(--mint)}
+  .hero h1{
+    font-family:var(--display);font-weight:800;
+    font-size:clamp(32px,5vw,52px);line-height:1.04;letter-spacing:-.5px;
+    margin:22px 0 16px;max-width:16ch;
+  }
+  .hero h1 em{font-style:normal;color:var(--mint)}
+  .hero p.lead{font-size:17px;color:#c4d0dc;max-width:54ch}
+
+  .hero__meta{display:flex;flex-wrap:wrap;gap:30px;margin-top:38px}
+  .hero__meta div{display:flex;flex-direction:column}
+  .hero__meta b{font-family:var(--display);font-weight:700;font-size:21px;color:var(--white)}
+  .hero__meta small{font-size:12.5px;letter-spacing:.5px;color:#8ea2b5;text-transform:uppercase}
+
+  /* ============ FORM CARD ============ */
+  .wrap{max-width:980px;margin:-78px auto 0;padding:0 24px 80px;position:relative;z-index:3}
+  .card{
+    background:var(--white);border-radius:22px;box-shadow:var(--shadow);
+    border:1px solid rgba(255,255,255,.6);overflow:hidden;
+  }
+  .card__head{
+    padding:30px 40px;border-bottom:1px solid var(--line);
+    display:flex;align-items:center;justify-content:space-between;gap:20px;
+    background:linear-gradient(180deg,#fbfcfe,#fff);
+  }
+  .card__head h2{font-family:var(--display);font-weight:700;font-size:21px;color:var(--navy)}
+  .card__head p{font-size:13.5px;color:var(--muted);margin-top:3px}
+  .req-id{
+    font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:1px;
+    color:var(--indigo);background:rgba(58,56,117,.07);
+    border:1px dashed rgba(58,56,117,.3);border-radius:8px;padding:8px 13px;white-space:nowrap;
+  }
+
+  form{padding:14px 40px 40px}
+  .section{padding:26px 0;border-bottom:1px solid var(--line)}
+  .section:last-of-type{border-bottom:none}
+  .section__title{
+    display:flex;align-items:center;gap:12px;margin-bottom:20px;
+  }
+  .section__num{
+    font-family:var(--display);font-weight:800;font-size:13px;
+    width:30px;height:30px;border-radius:9px;flex:0 0 auto;
+    display:grid;place-items:center;color:var(--white);
+    background:linear-gradient(135deg,var(--indigo),var(--indigo-deep));
+  }
+  .section__title h3{font-family:var(--display);font-weight:700;font-size:16px;color:var(--navy);letter-spacing:.2px}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px 22px}
+  .field{display:flex;flex-direction:column;gap:7px}
+  .field.col-2{grid-column:1 / -1}
+  label{font-size:13px;font-weight:600;color:var(--ink);letter-spacing:.2px}
+  label .star{color:var(--mint);font-weight:800}
+  .hint{font-size:11.5px;color:var(--muted);font-weight:500}
+
+  input,select,textarea{
+    font-family:var(--body);font-size:14.5px;color:var(--ink);
+    background:var(--field-bg);border:1.5px solid var(--line);border-radius:11px;
+    padding:13px 15px;width:100%;transition:.18s ease;outline:none;
+  }
+  textarea{resize:vertical;min-height:96px}
+  input::placeholder,textarea::placeholder{color:#9aa7b6}
+  input:focus,select:focus,textarea:focus{
+    border-color:var(--indigo);background:#fff;
+    box-shadow:0 0 0 4px rgba(132,196,200,.32);
+  }
+  select{appearance:none;cursor:pointer;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%235d6b7d' stroke-width='2.4'><path d='M6 9l6 6 6-6'/></svg>");
+    background-repeat:no-repeat;background-position:right 14px center;padding-right:40px;
+  }
+
+  /* price combo */
+  .combo{display:flex;gap:0}
+  .combo input{border-radius:11px 0 0 11px;border-right:none}
+  .combo select{width:104px;flex:0 0 auto;border-radius:0 11px 11px 0;background-color:#eef2f7}
+
+  /* dropzone */
+  .drop{
+    grid-column:1 / -1;border:2px dashed var(--mint);border-radius:14px;
+    background:linear-gradient(180deg,rgba(132,196,200,.08),rgba(132,196,200,.02));
+    padding:26px;text-align:center;cursor:pointer;transition:.18s ease;
+  }
+  .drop:hover{background:rgba(132,196,200,.14);border-color:var(--indigo)}
+  .drop svg{display:block;margin:0 auto 10px}
+  .drop b{font-family:var(--display);font-weight:600;color:var(--navy);font-size:14.5px}
+  .drop span{display:block;font-size:12.5px;color:var(--muted);margin-top:3px}
+  .drop input{display:none}
+  .filelist{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px;margin-top:-4px}
+  .chip{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;
+    background:rgba(58,56,117,.07);color:var(--indigo);border-radius:8px;padding:6px 11px}
+
+  /* footer of form */
+  .actions{
+    display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;
+    padding-top:28px;
+  }
+  .note{font-size:12.5px;color:var(--muted);max-width:42ch}
+  .btn{
+    font-family:var(--display);font-weight:700;font-size:15px;letter-spacing:.4px;
+    color:#fff;background:linear-gradient(135deg,var(--indigo),var(--indigo-deep));
+    border:none;border-radius:12px;padding:15px 34px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:11px;position:relative;overflow:hidden;
+    transition:transform .15s ease, box-shadow .2s ease;
+    box-shadow:0 14px 30px -12px rgba(58,56,117,.7);
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 20px 38px -12px rgba(58,56,117,.8)}
+  .btn:active{transform:translateY(0)}
+  .btn::after{content:"";position:absolute;inset:0;background:linear-gradient(120deg,transparent,rgba(132,196,200,.45),transparent);transform:translateX(-120%);transition:.5s}
+  .btn:hover::after{transform:translateX(120%)}
+  .btn svg{position:relative;z-index:1}
+  .btn span{position:relative;z-index:1}
+
+  /* success */
+  .success{display:none;padding:70px 40px;text-align:center}
+  .success.show{display:block;animation:pop .5s ease}
+  .success__ring{width:78px;height:78px;border-radius:50%;margin:0 auto 22px;
+    display:grid;place-items:center;background:rgba(132,196,200,.16);border:2px solid var(--mint)}
+  .success h2{font-family:var(--display);font-weight:800;font-size:26px;color:var(--navy);margin-bottom:10px}
+  .success p{color:var(--muted);max-width:46ch;margin:0 auto 22px}
+  .success .req-id{display:inline-block;font-size:15px;padding:12px 22px}
+  @keyframes pop{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:scale(1)}}
+
+  /* page footer */
+  .pagefoot{max-width:980px;margin:0 auto;padding:0 24px 56px;color:#7a8aa0;font-size:12.5px;
+    display:flex;flex-wrap:wrap;gap:8px 22px;align-items:center;justify-content:space-between}
+  .pagefoot a{color:var(--indigo);text-decoration:none;font-weight:600}
+
+  /* entrance animation */
+  .reveal{opacity:0;transform:translateY(14px);animation:rise .6s cubic-bezier(.2,.7,.2,1) forwards}
+  @keyframes rise{to{opacity:1;transform:none}}
+
+  /* ---- планшет ---- */
+  @media(max-width:720px){
+    .grid{grid-template-columns:1fr}
+    .card__head,form{padding-left:22px;padding-right:22px}
+    .card__head{flex-wrap:wrap}
+    .hero{padding:36px 20px 110px}
+    .brand{margin-bottom:42px}
+    .hero__meta{gap:18px 26px}
+  }
+
+  /* ---- телефон ---- */
+  @media(max-width:480px){
+    /* 16px — щоб iOS не зумив поле при фокусі */
+    input,select,textarea{font-size:16px;padding:14px}
+    .combo select{width:92px}
+    .wrap{padding:0 14px 60px;margin-top:-64px}
+    .card{border-radius:18px}
+    .card__head{padding:22px 18px;gap:12px}
+    .card__head h2{font-size:19px}
+    .req-id{font-size:11px;padding:7px 11px;width:100%;text-align:center}
+    form{padding:6px 18px 30px}
+    .section{padding:22px 0}
+    .hero{padding:30px 18px 100px}
+    .hero h1{font-size:29px}
+    .hero p.lead{font-size:15.5px}
+    .hero__meta{gap:16px 22px;margin-top:30px}
+    .hero__meta b{font-size:18px}
+    .brand__word{font-size:23px}
+    .brand{margin-bottom:34px}
+    /* кнопка та підпис — на всю ширину, кнопка знизу під палець */
+    .actions{flex-direction:column-reverse;align-items:stretch;gap:16px}
+    .btn{width:100%;justify-content:center;padding:16px;font-size:16px}
+    .note{text-align:center;max-width:none}
+    .drop{padding:22px 16px}
+    .pagefoot{flex-direction:column;text-align:center;gap:6px;padding-bottom:40px}
+    .success{padding:54px 20px}
+  }
+</style>
+</head>
+<body>
+
+  <!-- ============ HERO ============ -->
+  <header class="hero">
+    <div class="hero__bg"></div>
+    <div class="hero__scrim"></div>
+    <div class="hero__inner">
+
+      <!-- LOGO (стилізоване відтворення; у фінал вставимо офіційний SVG/PNG) -->
+      <div class="brand reveal" style="animation-delay:.05s">
+        <svg class="brand__mark" width="50" height="50" viewBox="0 0 50 50" fill="none">
+          <rect x="1" y="1" width="48" height="48" rx="11" stroke="#84C4C8" stroke-width="1.5" opacity=".5"/>
+          <path d="M14 12 h6 v20 h10 v6 H14 Z" fill="#FFFFFF"/>
+          <path d="M27 12 h12 v5 h-7 v4 h6 v5 h-6 v6 h-5 Z" fill="#84C4C8"/>
+        </svg>
+        <div class="brand__type">
+          <div class="brand__word"><b>DIF</b><span>FREIGHT</span></div>
+          <div class="brand__sub">International Logistics</div>
+        </div>
+      </div>
+
+      <span class="eyebrow reveal" style="animation-delay:.15s"><span class="dot"></span>Заявка на пошук постачальника</span>
+      <h1 class="reveal" style="animation-delay:.25s">Розкажіть, що шукаєте — <em>решту знайдемо ми</em></h1>
+      <p class="lead reveal" style="animation-delay:.35s">Заповніть запит на пошук товару та постачальника в Китаї. Наші байєри опрацюють відкриті джерела, перевірять фабрики й нададуть вам структурований звіт у форматі PDF.</p>
+
+      <div class="hero__meta reveal" style="animation-delay:.45s">
+        <div><b>1688 · Alibaba</b><small>Перевірені платформи</small></div>
+        <div><b>Звіт у PDF</b><small>Фірмовий формат</small></div>
+        <div><b>Фото та відео</b><small>Реальні з фабрик</small></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ FORM ============ -->
+  <main class="wrap">
+    <div class="card reveal" style="animation-delay:.5s">
+
+      <div class="card__head">
+        <div>
+          <h2>Деталі запиту</h2>
+          <p>Поля з <b style="color:var(--mint)">∗</b> обов'язкові. Що детальніше — то точніший результат пошуку.</p>
+        </div>
+        <div class="req-id" id="reqIdTop">№ заявки: формується…</div>
+      </div>
+
+      <form id="reqForm" novalidate>
+
+        <!-- 1. Контакти -->
+        <div class="section">
+          <div class="section__title"><span class="section__num">1</span><h3>Контактні дані</h3></div>
+          <div class="grid">
+            <div class="field col-2">
+              <label>Компанія / ПІБ <span class="star">∗</span></label>
+              <input name="client" required placeholder="ТОВ «Приклад» або Іван Петренко">
+            </div>
+            <div class="field">
+              <label>Email <span class="star">∗</span></label>
+              <input name="email" type="email" required placeholder="you@company.com">
+            </div>
+            <div class="field">
+              <label>Телефон / месенджер</label>
+              <input name="phone" placeholder="+380 __ ___ __ __ · Telegram / WhatsApp">
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Запит -->
+        <div class="section">
+          <div class="section__title"><span class="section__num">2</span><h3>Що потрібно знайти</h3></div>
+          <div class="grid">
+            <div class="field col-2">
+              <label>Назва товару <span class="star">∗</span></label>
+              <input name="product" required placeholder="Напр.: бездротові навушники TWS, корпус пластик">
+            </div>
+            <div class="field col-2">
+              <label>Опис / характеристики</label>
+              <textarea name="desc" placeholder="Матеріал, розміри, колір, технічні параметри, брендування, пакування…"></textarea>
+            </div>
+            <div class="field">
+              <label>Бажана кількість <span class="star">∗</span></label>
+              <input name="qty" required placeholder="Напр.: 1000 шт / 20 000 шт">
+            </div>
+            <div class="field">
+              <label>Посилання на аналог</label>
+              <input name="ref" placeholder="Посилання на схожий товар (приклад)">
+            </div>
+            <div class="field">
+              <label>Цільова ціна за одиницю</label>
+              <div class="combo">
+                <input name="price" inputmode="decimal" placeholder="Напр.: 4,50">
+                <select name="currency" aria-label="Валюта">
+                  <option>USD</option><option>CNY</option><option>EUR</option><option>UAH</option>
+                </select>
+              </div>
+            </div>
+            <div class="field">
+              <label>Бажані терміни</label>
+              <input name="deadline" placeholder="Напр.: до 30 днів / готовність до 01.08">
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Додатково -->
+        <div class="section">
+          <div class="section__title"><span class="section__num">3</span><h3>Додатково</h3></div>
+          <div class="grid">
+            <div class="field col-2">
+              <label>Особливі вимоги</label>
+              <textarea name="extra" placeholder="Сертифікати, гарантії, умови оплати, упаковка, логістика, інші побажання…"></textarea>
+            </div>
+
+            <label class="drop" for="files">
+              <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#3A3875" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <b>Додати фото-референс товару</b>
+              <span>Перетягніть файли або натисніть, щоб обрати · JPG, PNG, PDF</span>
+              <input id="files" name="files" type="file" multiple accept="image/*,.pdf">
+            </label>
+            <div class="filelist" id="filelist"></div>
+          </div>
+        </div>
+
+        <div class="actions">
+          <p class="note">Натискаючи «Надіслати», ви передаєте запит байєрам DifFreight. Ми звʼяжемося з вами щодо уточнень і термінів виконання.</p>
+          <button class="btn" type="submit">
+            <span>Надіслати запит</span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+      </form>
+
+      <!-- SUCCESS -->
+      <div class="success" id="success">
+        <div class="success__ring">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#3A3875" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        </div>
+        <h2>Запит прийнято!</h2>
+        <p>Дякуємо. Ваш запит передано команді DifFreight. Збережіть номер заявки — за ним ми ідентифікуємо ваш звіт.</p>
+        <div class="req-id" id="reqIdDone"></div>
+      </div>
+
+    </div>
+  </main>
+
+  <footer class="pagefoot">
+    <span>© DifFreight International Logistics · Пошук постачальників у Китаї</span>
+    <span><a href="https://diffreight.com" target="_blank">diffreight.com</a></span>
+  </footer>
+
+<script>
+  // Імітація автогенерації Order ID (у Web App його згенерує Apps Script на сабміті)
+  const pad = n => String(n).padStart(4,'0');
+  const seed = (new Date().getFullYear()) ; // без Date.now щоб було стабільно у прев'ю
+  let counter = 1287; // демо-лічильник
+  const reqId = `DF-${seed}-${pad(counter)}`;
+  document.getElementById('reqIdTop').textContent = '№ заявки: ' + reqId;
+
+  // Список обраних файлів
+  const fileInput = document.getElementById('files');
+  const filelist = document.getElementById('filelist');
+  fileInput.addEventListener('change', () => {
+    filelist.innerHTML = '';
+    [...fileInput.files].forEach(f => {
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      chip.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#3A3875" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>${f.name}`;
+      filelist.appendChild(chip);
+    });
+  });
+
+  // Сабміт (демо): показати екран подяки
+  const form = document.getElementById('reqForm');
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+    if(!form.checkValidity()){ form.reportValidity(); return; }
+    form.style.display='none';
+    document.querySelector('.card__head').style.display='none';
+    const ok = document.getElementById('success');
+    document.getElementById('reqIdDone').textContent = '№ заявки: ' + reqId;
+    ok.classList.add('show');
+    ok.scrollIntoView({behavior:'smooth',block:'center'});
+  });
+</script>
+</body>
+</html>
